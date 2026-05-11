@@ -27,7 +27,6 @@ A TCP receiver for an HTJ2K-based intelligent camera, an on-disk archiver, and a
 | `simple_tcp.hpp` | Header-only TCP wrapper with length-prefixed framing |
 | `CMakeLists.txt` | Build glue — `find_package(mongocxx CONFIG REQUIRED)` |
 | `demo/` | Flask app to search the archive by timestamp range |
-| `CLAUDE.md` | Notes for AI assistants working in this repo |
 
 ---
 
