@@ -1,5 +1,7 @@
 # cam-recv-archiver
 
+[日本語版 README はこちら](README.ja.md)
+
 A TCP receiver for an HTJ2K-based intelligent camera, an on-disk archiver, and a MongoDB index. Built and tested on **Ubuntu 24.04 LTS** with g++ 13 and CMake 3.28.
 
 ```
