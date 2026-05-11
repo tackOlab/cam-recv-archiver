@@ -5,6 +5,7 @@
 #include <cstdio>
 #include <cstring>
 #include <ctime>
+#include <filesystem>
 #include <iostream>
 #include <memory>
 #include <mongocxx/client.hpp>
@@ -12,6 +13,8 @@
 #include <mongocxx/instance.hpp>
 #include <mongocxx/uri.hpp>
 #include <vector>
+
+namespace fs = std::filesystem;
 
 using bsoncxx::builder::basic::kvp;
 using bsoncxx::builder::basic::make_document;
@@ -46,6 +49,17 @@ void create_filename_based_on_time(char *fname, char *iso_date) {
 }
 
 int main(int argc, char **argv) {
+  fs::path archive_dir = (argc > 1) ? fs::path(argv[1]) : fs::path(".");
+  std::error_code ec;
+  fs::create_directories(archive_dir, ec);
+  if (ec) {
+    fprintf(stderr, "Cannot create archive dir '%s': %s\n",
+            archive_dir.c_str(), ec.message().c_str());
+    return EXIT_FAILURE;
+  }
+  archive_dir = fs::absolute(archive_dir);
+  printf("Archive dir: %s\n", archive_dir.c_str());
+
   std::vector<uint8_t> data;
   data.reserve(5000000);
   char fname[256];
@@ -87,7 +101,8 @@ int main(int argc, char **argv) {
                                  std::chrono::system_clock::now()))));
         printf("%s = %u bytes\n", fname, rsize);
 
-        FILE *fp = fopen(fname, "wb");
+        fs::path fpath = archive_dir / fname;
+        FILE *fp = fopen(fpath.c_str(), "wb");
         if (!fp) {
           perror("fopen");
           continue;

@@ -67,3 +67,14 @@ vcpkg_installed/
 # test output & cache
 Testing/
 .cache/
+
+# Python (demo)
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+*.egg-info/
+
+# Archived camera frames
+*.jph
+*.j2c

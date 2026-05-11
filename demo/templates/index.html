@@ -1,0 +1,112 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>cam-recv-archiver — frame search</title>
+  <style>
+    body { font-family: system-ui, sans-serif; margin: 2rem; max-width: 1100px; color: #222; }
+    h1 { margin: 0 0 0.25rem; }
+    .src { color: #777; font-size: 0.85rem; margin-bottom: 1rem; }
+    .src code { background: #f3f3f3; padding: 0.05rem 0.3rem; border-radius: 3px; }
+    form { display: flex; gap: 1rem; flex-wrap: wrap; align-items: end;
+           margin-bottom: 1rem; padding: 1rem; background: #f5f5f5; border-radius: 6px; }
+    form label { display: flex; flex-direction: column; font-size: 0.8rem; color: #555; }
+    form input { font-size: 1rem; padding: 0.3rem; }
+    form button { font-size: 1rem; padding: 0.4rem 1.2rem; cursor: pointer; }
+    .error { background: #fee; border: 1px solid #f99; padding: 0.6rem 0.8rem;
+             border-radius: 4px; margin-bottom: 1rem; }
+    .meta { color: #777; font-size: 0.85rem; margin: 0.5rem 0 1rem; }
+    table { width: 100%; border-collapse: collapse; }
+    th, td { text-align: left; padding: 0.4rem 0.6rem; border-bottom: 1px solid #eee;
+             vertical-align: middle; }
+    th { background: #fafafa; font-weight: 600; }
+    td.right { text-align: right; font-variant-numeric: tabular-nums; }
+    td.missing { color: #b00; }
+    .preview-todo { color: #999; font-style: italic; font-size: 0.85rem; }
+    code { font-size: 0.9em; }
+  </style>
+</head>
+<body>
+  <h1>cam-recv-archiver — frame search</h1>
+  <p class="src">
+    MongoDB <code>{{ mongo_uri }}</code> &middot; namespace <code>{{ mongo_ns }}</code>
+    &middot; archive dir <code>{{ archive_dir }}</code>
+  </p>
+
+  <form method="get" action="/">
+    <label>From ({{ tz_label }})
+      <input type="datetime-local" name="from" value="{{ frm }}" step="1">
+    </label>
+    <label>To ({{ tz_label }})
+      <input type="datetime-local" name="to" value="{{ to }}" step="1">
+    </label>
+    <label>Limit
+      <input type="number" name="limit" min="1" max="500" value="{{ limit }}">
+    </label>
+    <button type="submit">Search</button>
+  </form>
+
+  {% if error %}
+    <div class="error">{{ error }}</div>
+  {% endif %}
+
+  {% if results is not none %}
+    <p class="meta">
+      {{ results | length }} result(s){% if results | length == limit %} &middot; capped at limit {{ limit }}{% endif %}
+    </p>
+    {% if results %}
+    <table>
+      <thead>
+        <tr>
+          <th>Timestamp ({{ tz_label }})</th>
+          <th>Filename</th>
+          <th class="right">Size</th>
+          <th>Preview</th>
+          <th>Download</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for r in results %}
+          <tr>
+            <td>{{ r.timestamp.strftime('%Y-%m-%d %H:%M:%S.') }}{{ '%03d' % (r.timestamp.microsecond // 1000) if r.timestamp else '—' }}</td>
+            <td><code>{{ r.fname }}</code></td>
+            <td class="right">
+              {% if r.size is none %}
+                <span class="missing">missing</span>
+              {% else %}
+                {{ '{:,}'.format(r.size) }} B
+              {% endif %}
+            </td>
+            <td>
+              {# TODO(preview): replace this placeholder with an inline canvas
+                 decoded by the OpenHTJ2K wasm module.
+
+                 Integration plan:
+                   1. Drop the OpenHTJ2K wasm bundle into demo/static/openhtj2k/
+                      (built from https://github.com/osamu620/OpenHTJ2K).
+                   2. In a <script type="module"> on this page, init the decoder
+                      once on DOMContentLoaded.
+                   3. For each row, fetch /file/{{ '{{ r.fname }}' }} (already
+                      serves the raw .jph bytes), pass to decoder.decode(),
+                      blit the resulting RGBA frame into a <canvas> here.
+                   4. See https://htj2k-demo.pages.dev for the reference
+                      integration. #}
+              <span class="preview-todo">(TODO: OpenHTJ2K wasm)</span>
+            </td>
+            <td>
+              {% if r.size is not none %}
+                <a href="/file/{{ r.fname }}" download>download</a>
+              {% else %}
+                <span class="missing">—</span>
+              {% endif %}
+            </td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    {% endif %}
+  {% else %}
+    <p class="meta">Enter a time range above to search the archive.</p>
+  {% endif %}
+</body>
+</html>
