@@ -1,5 +1,7 @@
 # demo — frame search UI
 
+[日本語版 README はこちら](README.ja.md)
+
 A small Flask app that queries the MongoDB collection populated by the receiver and lists matching `.jph` frames for download. Search by a local-time range; results are sorted newest-first and capped by a `limit` parameter.
 
 ## Setup
